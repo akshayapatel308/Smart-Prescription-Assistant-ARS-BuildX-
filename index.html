@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Prescription Assistant</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f7ff;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1769aa;
+        }
+
+        .upload-box {
+            text-align: center;
+            padding: 25px;
+            border: 2px dashed #1769aa;
+            border-radius: 10px;
+        }
+
+        button {
+            background: #1769aa;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        button:hover {
+            background: #0d4f80;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            margin-top: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        input[type="time"] {
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>💊 Smart Prescription Assistant</h1>
+
+    <p style="text-align:center;">
+        Read • Translate • Speak • Remind
+    </p>
+
+    <div class="upload-box">
+
+        <input type="file"
+               id="prescription"
+               accept="image/*">
+
+        <br>
+
+        <button onclick="processPrescription()">
+            📷 Read Prescription
+        </button>
+
+    </div>
+
+    <div class="result">
+
+        <h3>📝 Extracted Prescription</h3>
+
+        <textarea id="extracted"
+                  readonly></textarea>
+
+        <h3>🌐 Telugu Translation</h3>
+
+        <textarea id="translated"
+                  readonly></textarea>
+
+        <button onclick="speakText()">
+            🔊 Read Aloud
+        </button>
+
+    </div>
+
+    <div class="result">
+
+        <h3>⏰ Medicine Reminder</h3>
+
+        <label>Select Reminder Time:</label>
+
+        <input type="time" id="reminderTime">
+
+        <button onclick="setReminder()">
+            Set Reminder
+        </button>
+
+        <p id="reminderStatus"></p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+function processPrescription() {
+
+    let fileInput =
+        document.getElementById("prescription");
+
+    if (fileInput.files.length === 0) {
+        alert("Please select a prescription image.");
+        return;
+    }
+
+    let formData = new FormData();
+
+    formData.append(
+        "prescription",
+        fileInput.files[0]
+    );
+
+    fetch("/process", {
+        method: "POST",
+        body: formData
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        document.getElementById("extracted")
+            .value = data.extracted_text;
+
+        document.getElementById("translated")
+            .value = data.translated_text;
+
+    })
+
+    .catch(error => {
+
+        alert("Something went wrong.");
+
+        console.log(error);
+
+    });
+}
+
+
+function speakText() {
+
+    let text =
+        document.getElementById("translated").value;
+
+    if (!text) {
+        alert("Please process the prescription first.");
+        return;
+    }
+
+    let speech =
+        new SpeechSynthesisUtterance(text);
+
+    speech.lang = "te-IN";
+
+    speech.rate = 0.9;
+
+    window.speechSynthesis.speak(speech);
+}
+
+
+function setReminder() {
+
+    let time =
+        document.getElementById("reminderTime").value;
+
+    if (!time) {
+        alert("Please select a time.");
+        return;
+    }
+
+    document.getElementById("reminderStatus")
+        .innerText =
+        "✅ Reminder set for " + time;
+
+    alert(
+        "Medicine reminder set for " + time
+    );
+}
+
+</script>
+
+</body>
+</html>
